@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Get Your Key</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0b0c;
+    --panel: #151314;
+    --line: #3a1a1c;
+    --text: #ece4df;
+    --muted: #a39892;
+    --accent: #d42a22;
+    --accent-dark: #8e1410;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% 0%, rgba(160, 20, 20, 0.28), rgba(160, 20, 20, 0) 70%),
+      radial-gradient(ellipse 90% 40% at 50% 100%, rgba(140, 130, 130, 0.14), rgba(140, 130, 130, 0) 75%);
+    color: var(--text);
+    font-family: 'Barlow', system-ui, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+  main { width: 100%; max-width: 560px; }
+  .eyebrow {
+    margin: 0 0 6px;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  h1 {
+    margin: 0 0 24px;
+    font-family: 'Anton', sans-serif;
+    font-weight: 400;
+    font-size: clamp(40px, 9vw, 64px);
+    line-height: 0.95;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--accent);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .label {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(22px, 6vw, 32px);
+    letter-spacing: 2px;
+    word-break: break-all;
+    margin: 0 0 18px;
+  }
+  .code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    background: #0d0c0c;
+    border: 1px solid var(--line);
+    padding: 12px;
+    margin: 0 0 14px;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  button {
+    font: inherit;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #ffffff;
+    background: var(--accent-dark);
+    border: 1px solid var(--accent);
+    padding: 12px 20px;
+    min-height: 44px;
+    cursor: pointer;
+  }
+  button:hover { background: var(--accent); }
+  .expires { margin: 14px 0 0; color: var(--muted); font-size: 15px; }
+  .expires strong { color: var(--text); }
+  ol { margin: 0; padding-left: 20px; color: var(--muted); line-height: 1.7; }
+  .game + .game { margin-top: 18px; }
+  .game-name { margin: 0 0 8px; font-weight: 700; font-size: 17px; }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow" id="eyebrow">Script key</p>
+  <h1>Your Key</h1>
+
+  <section class="card" aria-labelledby="key-label">
+    <p class="label" id="key-label">Current key</p>
+    <p class="key" id="key">----</p>
+    <button type="button" id="copy-key">Copy key</button>
+    <p class="expires">This key works for <strong id="expires">--</strong> more.</p>
+  </section>
+
+  <section class="card" aria-labelledby="loader-label">
+    <p class="label" id="loader-label">Loadstring</p>
+    <div id="loaders"></div>
+  </section>
+
+  <section class="card" aria-labelledby="how-label">
+    <p class="label" id="how-label">How to use</p>
+    <ol>
+      <li>Copy the loadstring and run it in your executor.</li>
+      <li>When the key window opens, paste your key and submit.</li>
+      <li>Your key is saved, so you won't need it again until it expires.</li>
+    </ol>
+  </section>
+</main>
+
+<script>
+  const SECRET = "KkNTLRKqziEYmZAhzh7zru5uAspe";
+  const WINDOW = 3600; // 1-hour windows; each key works up to 2 hours
+
+  const GAMES = {
+    ftf: {
+      name: "Flee The Facility",
+      loader: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/pantheon111/ftf/main/flee_the_facility_obfuscated.lua"))()'
+    },
+    jjs: {
+      name: "Jujutsu Shenanigans",
+      loader: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/pantheon111/jjs/main/jujutsu_shenanigans_obfuscated.lua"))()'
+    }
+  };
+
+  function hex8(n) {
+    return n.toString(16).toUpperCase().padStart(8, "0");
+  }
+
+  function keyFor(w) {
+    const s = String(w) + ":" + SECRET + ":" + String(w);
+    let h1 = 5381, h2 = 52711;
+    for (let pass = 0; pass < 3; pass++) {
+      for (let i = 0; i < s.length; i++) {
+        const c = s.charCodeAt(i);
+        h1 = (h1 * 33 + c + Math.floor(h1 / 65536)) % 4294967296;
+        h2 = (h2 * 31 + c * 7 + Math.floor(h2 / 8192) + h1 % 977) % 4294967296;
+      }
+    }
+    const hex = hex8(h1) + hex8(h2);
+    return hex.slice(0, 4) + "-" + hex.slice(4, 8) + "-" + hex.slice(8, 12) + "-" + hex.slice(12, 16);
+  }
+
+  function copy(text, button) {
+    const done = () => {
+      const old = button.textContent;
+      button.textContent = "Copied";
+      setTimeout(() => { button.textContent = old; }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+    } else {
+      fallbackCopy(text, done);
+    }
+  }
+
+  function fallbackCopy(text, done) {
+    const area = document.createElement("textarea");
+    area.value = text;
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand("copy"); done(); } catch (e) {}
+    area.remove();
+  }
+
+  const params = new URLSearchParams(location.search);
+  const game = GAMES[params.get("game")] ? params.get("game") : null;
+  const shown = game ? [game] : Object.keys(GAMES);
+
+  if (game) {
+    document.getElementById("eyebrow").textContent = GAMES[game].name;
+    document.title = GAMES[game].name + " Key";
+  }
+
+  const loaders = document.getElementById("loaders");
+  shown.forEach((id) => {
+    const wrap = document.createElement("div");
+    wrap.className = "game";
+    if (!game) {
+      const name = document.createElement("p");
+      name.className = "game-name";
+      name.textContent = GAMES[id].name;
+      wrap.appendChild(name);
+    }
+    const code = document.createElement("div");
+    code.className = "code";
+    code.textContent = GAMES[id].loader;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = "Copy loadstring";
+    btn.addEventListener("click", () => copy(GAMES[id].loader, btn));
+    wrap.appendChild(code);
+    wrap.appendChild(btn);
+    loaders.appendChild(wrap);
+  });
+
+  function update() {
+    const now = Math.floor(Date.now() / 1000);
+    const w = Math.floor(now / WINDOW);
+    const key = keyFor(w);
+    document.getElementById("key").textContent = key;
+    const left = (w + 2) * WINDOW - now; // valid this window and the next
+    const h = Math.floor(left / 3600);
+    const m = Math.floor((left % 3600) / 60);
+    document.getElementById("expires").textContent = h + "h " + m + "m";
+  }
+
+  document.getElementById("copy-key").addEventListener("click", (e) => {
+    copy(document.getElementById("key").textContent, e.currentTarget);
+  });
+
+  update();
+  setInterval(update, 30000);
+</script>
+</body>
+</html>
