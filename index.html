@@ -186,7 +186,7 @@
   }
 
   const params = new URLSearchParams(location.search);
-  const game = GAMES[params.get("game")] ? params.get("game") : null;
+  const game = GAMES[(params.get("game") || "").toLowerCase().replace(/[^a-z]/g, "")] ? (params.get("game") || "").toLowerCase().replace(/[^a-z]/g, "") : null;
   const shown = game ? [game] : Object.keys(GAMES);
 
   if (game) {
